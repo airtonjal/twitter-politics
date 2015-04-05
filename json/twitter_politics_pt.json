@@ -1,0 +1,24 @@
+PUT _river/twitter_politics_river/_meta
+{
+    "type" : "twitter",
+    "twitter" : {
+        "oauth" : {
+            "consumer_key" : "KFIWmqaMwR29TXRZsQSV6cQ8d",
+            "consumer_secret" : "cdnk6VEWiX7CnjPZhU9Que3UdQH4kz4K3i90sUX6WzQHBWKk6S",
+            "access_token" : "36367495-T60vnqPUxTYx2yPi8YwJBghi4nwXrww4r8h8tm4Rq",
+            "access_token_secret" : "2H8MvsuT09mNEEyhkaQEnepiSHWBpTGqfpn4aKvqpNffH"
+        },
+        "filter" : {
+            "tracks" : "dilma,aecio,pt,pmdb,psdb,lula,senado,renan calheiros,eduardo cunha,corrupcao,lava-jato,lava jato,petrobras,impeachment",
+            "language" : "pt" 
+        }
+    },
+    "index" : {
+        "index" : "twitter_politics",
+        "type" : "status",
+        "bulk_size" : 100,
+        "flush_interval" : "5s",
+        "retry_after" : "10s"
+    }
+}
+
