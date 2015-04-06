@@ -30,32 +30,26 @@ object Main {
     }
 
     setupTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret)
-    val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(1))
-    val stream = TwitterUtils.createStream(ssc, None)
+    val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(2))
+    val stream = TwitterUtils.createStream(ssc, None,
+      Seq("obama","republicans","democrats","elections","clinton","ted cruz","jeb bush","ben carson"))
 
 //    stream.print()
 
-    val hashTags = stream.flatMap(status => status.getText.split(" ").filter(_.startsWith("#")))
+//    val hashTags = stream.flatMap(status => status.getText.split(" ").filter(_.startsWith("#")))
+    val hashTags = stream.flatMap(status => status.getHashtagEntities.map("#" + _.getText))
 
-    val topCounts60 = hashTags.map((_, 1)).reduceByKeyAndWindow(_ + _, Seconds(60))
-      .map{case (topic, count) => (count, topic)}
+    val top60 = hashTags.map((_, 1)).reduceByKeyAndWindow(_ + _, Seconds(60))
+      .map{ case (topic, count) => (count, topic) }
       .transform(_.sortByKey(false))
 
-    val topCounts10 = hashTags.map((_, 1)).reduceByKeyAndWindow(_ + _, Seconds(10))
-      .map{case (topic, count) => (count, topic)}
-      .transform(_.sortByKey(false))
-
-    // Print popular hashtags
-    topCounts60.foreachRDD(rdd => {
+    // Print popular hashtags in the last 60 seconds
+    top60.foreachRDD(rdd => {
       val topList = rdd.take(10)
       log.info("Popular topics in last 60 seconds (%s total):".format(rdd.count()))
-      topList.foreach{case (count, tag) => println("%s (%s tweets)".format(tag, count))}
-    })
-
-    topCounts10.foreachRDD(rdd => {
-      val topList = rdd.take(10)
-      log.info("Popular topics in last 10 seconds (%s total):".format(rdd.count()))
-      topList.foreach{case (count, tag) => println("%s (%s tweets)".format(tag, count))}
+      log.info("-----------------------------------------------------------")
+      topList.foreach{case (count, tag) => log.info("%s (%s tweets)".format(tag, count))}
+      log.info("-----------------------------------------------------------")
     })
 
 //    stream.foreachRDD{(tweetRDD, time) =>
