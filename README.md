@@ -9,3 +9,12 @@ To build the application, go to the root dir and type:
 ./gradlew clean assemble install
 ```
 
+# Running
+
+To run the application, build it, set the classpath and invoke the jar:
+
+```shell
+java -jar build/libs/twitter-politics-0.1.jar SPARK_MASTER CONSUMER_KEY CONSUMER_SECRET ACCESS_TOKEN ACCESS_TOKEN_SECRET ES_RESOURCE [ES_NODES]
+```
+
+
