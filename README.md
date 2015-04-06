@@ -17,4 +17,5 @@ To run the application, build it, set the classpath and invoke the jar:
 java -jar build/libs/twitter-politics-0.1.jar SPARK_MASTER CONSUMER_KEY CONSUMER_SECRET ACCESS_TOKEN ACCESS_TOKEN_SECRET ES_RESOURCE [ES_NODES]
 ```
 
+You can generate your keys by following the [Twitter Documentation](https://dev.twitter.com/oauth/overview/application-owner-access-tokens)
 
