@@ -1,5 +1,7 @@
 package com.airtonjal
 
+import org.apache.commons.logging.LogFactory
+import org.apache.spark.SparkContext
 import org.apache.spark.streaming.twitter._
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
@@ -13,9 +15,13 @@ import twitter4j.TwitterFactory
  */
 object Main {
 
+  private val log = LogFactory.getLog(getClass())
+
   def main(args: Array[String]) {
-    if (args.length < 5)
-      System.err.println("Twitter politics usage <master> <key> <secret key> <access token> <access token secret> <es-resource> [es-nodes]")
+    if (args.length < 5) {
+      log.fatal("Twitter politics usage <master> <key> <secret key> <access token> <access token secret> <es-resource> [es-nodes]")
+      System.exit(1)
+    }
 
     val Array(master, consumerKey, consumerSecret, accessToken, accessTokenSecret, esResource) = args.take(6)
     val esNodes = args.length match {
@@ -24,16 +30,45 @@ object Main {
     }
 
     setupTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret)
+    val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(1))
+    val stream = TwitterUtils.createStream(ssc, None)
 
-    val ssc = new StreamingContext(master, "IndexTweetsLive", Seconds(1))
+//    stream.print()
 
-    val tweets = TwitterUtils.createStream(ssc, None)
-    tweets.print()
+    val hashTags = stream.flatMap(status => status.getText.split(" ").filter(_.startsWith("#")))
+
+    val topCounts60 = hashTags.map((_, 1)).reduceByKeyAndWindow(_ + _, Seconds(60))
+      .map{case (topic, count) => (count, topic)}
+      .transform(_.sortByKey(false))
+
+    val topCounts10 = hashTags.map((_, 1)).reduceByKeyAndWindow(_ + _, Seconds(10))
+      .map{case (topic, count) => (count, topic)}
+      .transform(_.sortByKey(false))
+
+    // Print popular hashtags
+    topCounts60.foreachRDD(rdd => {
+      val topList = rdd.take(10)
+      log.info("Popular topics in last 60 seconds (%s total):".format(rdd.count()))
+      topList.foreach{case (count, tag) => println("%s (%s tweets)".format(tag, count))}
+    })
+
+    topCounts10.foreachRDD(rdd => {
+      val topList = rdd.take(10)
+      log.info("Popular topics in last 10 seconds (%s total):".format(rdd.count()))
+      topList.foreach{case (count, tag) => println("%s (%s tweets)".format(tag, count))}
+    })
+
+//    stream.foreachRDD{(tweetRDD, time) =>
+//      val tweet = tweetRDD.take(1)
+//      tweet.foreach(t => print(t.getText))
+//    }
+
+    ssc.start()
+    ssc.awaitTermination()
+
+
 
     // Old way
-//    tweets.foreachRDD{(tweetRDD, time) =>
-//
-//    }
     /**
     tweets.foreachRDD{(tweetRDD, time) =>
       val sc = tweetRDD.context
@@ -54,6 +89,7 @@ object Main {
 //    println("pandas: awaittermination")
 //    ssc.awaitTermination()
 //    println("pandas: done!")
+
   }
 
   def prepareTweets(tweet: twitter4j.Status) = {
