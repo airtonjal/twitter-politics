@@ -1,13 +1,9 @@
 package com.airtonjal
 
 import org.apache.commons.logging.LogFactory
-import org.apache.spark.SparkContext
+import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.streaming.twitter._
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-
-import scala.collection.immutable.HashMap
-// twitter imports
-import twitter4j.TwitterFactory
 
 /**
  * Application entry point
@@ -31,82 +27,50 @@ object Main {
 
     setupTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret)
     val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(2))
-    val stream = TwitterUtils.createStream(ssc, None,
-      Seq("obama","republicans","democrats","elections","clinton","ted cruz","jeb bush","ben carson"))
 
+    val terms = Seq(("obama", 0),("republicans", 0),("democrats", 0),("elections", 0),("clinton", 0),
+      ("ted cruz", 0),("jeb bush", 0),("ben carson", 0), ("@SenTedCruz", 0))
+    var distTerms = ssc.sparkContext.parallelize(terms)
+
+    val stream = TwitterUtils.createStream(ssc, None, terms.map(_._1))
 //    stream.print()
 
-//    val hashTags = stream.flatMap(status => status.getText.split(" ").filter(_.startsWith("#")))
     val hashTags = stream.flatMap(status => status.getHashtagEntities.map("#" + _.getText))
 
-    val top60 = hashTags.map((_, 1)).reduceByKeyAndWindow(_ + _, Seconds(60))
-      .map{ case (topic, count) => (count, topic) }
+    val WINDOW = 120
+    // Print popular hashtags in the last 120 seconds
+    val topHashTags = hashTags.map((_, 1)).reduceByKeyAndWindow(_ + _, Seconds(WINDOW))
+      .map{ case (hashTag, count) => (count, hashTag) }
       .transform(_.sortByKey(false))
-
-    // Print popular hashtags in the last 60 seconds
-    top60.foreachRDD(rdd => {
-      val topList = rdd.take(10)
-      log.info("Popular topics in last 60 seconds (%s total):".format(rdd.count()))
+    topHashTags.foreachRDD(tweetRDD => {
+      val topList = tweetRDD.take(10)
       log.info("-----------------------------------------------------------")
+      log.info("Popular topics in last " + WINDOW + " seconds (%s total):".format(tweetRDD.count()))
       topList.foreach{case (count, tag) => log.info("%s (%s tweets)".format(tag, count))}
       log.info("-----------------------------------------------------------")
     })
 
-//    stream.foreachRDD{(tweetRDD, time) =>
-//      val tweet = tweetRDD.take(1)
-//      tweet.foreach(t => print(t.getText))
-//    }
+    ssc.sparkContext.setLocalProperty("spark.serializer", classOf[KryoSerializer].getName)
+
+    import org.elasticsearch.spark._
+    stream.foreachRDD((tweetRDD, time) => {
+      tweetRDD.map(t => Map(
+        "text"      -> t.getText,
+        "sentiment" -> SimpleSentimentAnalysis.classify(t.getText)._1,
+        "created_at" -> t.getCreatedAt,
+//        "location"  -> t.getGeoLocation,
+        "language"  -> t.getLang,
+        "user"      -> t.getUser.getName
+      ).filter(kv => kv._2 != null)
+      ).saveToEs(esResource)
+    })
+
+    log.info("Starting twitter-politics stream")
 
     ssc.start()
     ssc.awaitTermination()
 
-
-
-    // Old way
-    /**
-    tweets.foreachRDD{(tweetRDD, time) =>
-      val sc = tweetRDD.context
-      val jobConf = SharedESConfig.setupEsOnSparkContext(sc, esResource, Some(esNodes))
-      val tweetsAsMap = tweetRDD.map(SharedIndex.prepareTweets)
-      tweetsAsMap.saveAsHadoopDataset(jobConf)
-    }
-      **/
-//    // New fancy way
-//    tweets.foreachRDD{(tweetRDD, time) =>
-//      val sc = tweetRDD.context
-//      val sqlCtx = new SQLContext(sc)
-//      val tweetsAsCS = sqlCtx.createSchemaRDD(tweetRDD.map(SharedIndex.prepareTweetsCaseClass))
-//      tweetsAsCS.saveToEs(esResource)
-//    }
-//    println("pandas: sscstart")
-//    ssc.start()
-//    println("pandas: awaittermination")
-//    ssc.awaitTermination()
-//    println("pandas: done!")
-
-  }
-
-  def prepareTweets(tweet: twitter4j.Status) = {
-    println("panda preparing tweet!")
-    val fields = tweet.getGeoLocation() match {
-      case null => HashMap(
-        "docid" -> tweet.getId().toString,
-        "message" -> tweet.getText(),
-        "hashTags" -> tweet.getHashtagEntities().map(_.getText()).mkString(" ")
-      )
-      case loc => {
-        val lat = loc.getLatitude()
-        val lon = loc.getLongitude()
-        HashMap(
-          "docid" -> tweet.getId().toString,
-          "message" -> tweet.getText(),
-          "hashTags" -> tweet.getHashtagEntities().map(_.getText()).mkString(" "),
-          "location" -> s"$lat,$lon"
-        )
-      }
-    }
-//    val output = mapToOutput(fields)
-//    output
+    log.info("Finishing twitter-politics stream")
   }
 
   def setupTwitter(consumerKey: String, consumerSecret: String, accessToken: String, accessTokenSecret: String) ={
@@ -126,8 +90,5 @@ object Main {
     System.setProperty("twitter4j.oauth.authenticationURL", "https://api.twitter.com/oauth/authenticate")
   }
 
-  def fetchTweets(ids: Seq[String]) = {
-    val twitter = new TwitterFactory().getInstance();
-  }
 
 }

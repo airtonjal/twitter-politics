@@ -5,12 +5,10 @@ import org.apache.commons.logging.LogFactory
 import scala.io.Source
 
 /**
- * A very rudimentary sentiment analysis algorithm. For each text, counts the number of negative and positive words and
- * outputs a factor indicating the tendency
+ * A rudimentary sentiment analysis implementation
  * @author <a href="mailto:airton.liborio@webradar.com">Airton Libório</a>
  */
-object SimpleSentimetAnalysis {
-
+object SimpleSentimentAnalysis {
   private val log = LogFactory.getLog(getClass())
 
   private val POSITIVE_FILE = "positive-words.txt"
@@ -35,8 +33,8 @@ object SimpleSentimetAnalysis {
     }
 
     (if      (factor < 0) NEGATIVE_WORD
-     else if (factor > 0) POSITIVE_WORD
-     else                 NEUTRAL_WORD, factor)
+    else if (factor > 0) POSITIVE_WORD
+    else                 NEUTRAL_WORD, factor)
   }
 
 }
