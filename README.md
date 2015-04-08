@@ -23,7 +23,8 @@ You can generate your keys by following the [Twitter Documentation](https://dev.
 
 # Screenshots
 
-![Politics tweets visualization](img/sentiment\ percentage.png)
-![Politics tweets visualization](img/sentiment\ stack.png)
-![Politics tweets visualization](img/sentiment\ dash.png)
+![](img/sentiment\ map.png)
+![](img/sentiment\ percentage.png)
+![](img/sentiment\ stack.png)
+![](img/sentiment\ dash.png)
 
