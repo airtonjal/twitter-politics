@@ -54,15 +54,19 @@ object Main {
 
     import org.elasticsearch.spark._
     stream.foreachRDD((tweetRDD, time) => {
-      tweetRDD.map(t => Map(
-        "text"      -> t.getText,
-        "sentiment" -> SimpleSentimentAnalysis.classify(t.getText)._1,
-        "created_at" -> t.getCreatedAt,
-//        "location"  -> t.getGeoLocation,
-        "language"  -> t.getLang,
-        "user"      -> t.getUser.getName
-      ).filter(kv => kv._2 != null)
-      ).saveToEs(esResource)
+      tweetRDD.map{ t =>
+        val location = t.getGeoLocation match {
+          case null => None
+          case gl   => Some(Map("lat" -> t.getGeoLocation.getLatitude, "lon" -> t.getGeoLocation.getLongitude))
+        }
+        Map("text"     -> t.getText,
+          "sentiment"  -> SimpleSentimentAnalysis.classify(t.getText)._1,
+          "created_at" -> t.getCreatedAt,
+          "location"   -> location,
+          "language"   -> t.getLang,
+          "user"       -> t.getUser.getName)
+          .filter(kv => kv._2 != null && kv._2 != None)
+      }.saveToEs(esResource)
     })
 
     log.info("Starting twitter-politics stream")
