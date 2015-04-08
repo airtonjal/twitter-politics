@@ -1,6 +1,7 @@
 # twitter-politics
-A twitter stream filtered by politics topics. The data is streamed into [Apache Spark](https://spark.apache.org/), processed and indexed into [Elasticsearch](https://www.elastic.co/). A simple [sentiment analysis](http://en.wikipedia.org/wiki/Sentiment_analysis) is performed in order to classify tweets as positive/negative. The following screenshot shows the resulting data visualized with [Kibana](https://www.elastic.co/products/kibana):
+A twitter stream filtered by politics topics. The data is streamed into [Apache Spark](https://spark.apache.org/), processed and indexed into [Elasticsearch](https://www.elastic.co/). A simple [sentiment analysis](http://en.wikipedia.org/wiki/Sentiment_analysis) is performed in order to classify tweets as positive/negative. The following screenshots shows the resulting data visualized with [Kibana](https://www.elastic.co/products/kibana):
 
+![Politics tweets visualization](img/sentiment\ percentage.png)
 ![Politics tweets visualization](img/kibana.png)
 
 # Building
