@@ -15,7 +15,7 @@ object Main {
 
   def main(args: Array[String]) {
     if (args.length < 5) {
-      log.fatal("Twitter politics usage <master> <key> <secret key> <access token> <access token secret> <es-resource> [es-nodes]")
+      log.fatal("Twitter politics usage: <master> <key> <secret key> <access token> <access token secret> <es-resource> [es-nodes]")
       System.exit(1)
     }
 
@@ -28,9 +28,10 @@ object Main {
     setupTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret)
     val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(2))
 
+    // TODO: change this to a list since the terms are not being counted by now
     val terms = Seq(("obama", 0),("republicans", 0),("democrats", 0),("elections", 0),("clinton", 0),
       ("ted cruz", 0),("jeb bush", 0),("ben carson", 0), ("@SenTedCruz", 0))
-    var distTerms = ssc.sparkContext.parallelize(terms)
+//    var distTerms = ssc.sparkContext.parallelize(terms)
 
     val stream = TwitterUtils.createStream(ssc, None, terms.map(_._1))
 //    stream.print()
