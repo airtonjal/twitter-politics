@@ -66,7 +66,7 @@ object Main {
           "language"   -> t.getLang,
           "user"       -> t.getUser.getName)
           .filter(kv => kv._2 != null && kv._2 != None)
-      }.saveToEs(esResource)
+      }.saveToEs(esResource, Map("es.nodes" -> esNodes))
     })
 
     log.info("Starting twitter-politics stream")
