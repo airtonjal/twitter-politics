@@ -6,7 +6,7 @@ import scala.io.Source
 
 /**
  * A rudimentary sentiment analysis implementation
- * @author <a href="mailto:airton.liborio@webradar.com">Airton Libório</a>
+ * @author <a href="mailto:airtonjal@gmail.com">Airton Libório</a>
  */
 object SimpleSentimentAnalysis {
   private val log = LogFactory.getLog(getClass())
@@ -32,7 +32,7 @@ object SimpleSentimentAnalysis {
       if (negativeSet(w)) factor = factor - 1
     }
 
-    (if      (factor < 0) NEGATIVE_WORD
+    (if     (factor < 0) NEGATIVE_WORD
     else if (factor > 0) POSITIVE_WORD
     else                 NEUTRAL_WORD, factor)
   }
