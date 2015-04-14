@@ -5,6 +5,8 @@ import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.streaming.twitter._
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
+import scala.io.Source
+
 /**
  * Application entry point
  * @author <a href="mailto:airtonjal@gmail.com">Airton Libório</a>
@@ -14,26 +16,29 @@ object Main {
   private val log = LogFactory.getLog(getClass())
 
   def main(args: Array[String]) {
-    if (args.length < 5) {
-      log.fatal("Twitter politics usage: <master> <key> <secret key> <access token> <access token secret> <es-resource> [es-nodes]")
+    if (args.length < 6) {
+      log.fatal("Twitter politics usage: <master> <key> <secret key> <access token> <access token secret> <terms file> <es-resource> [es-nodes]")
       System.exit(1)
     }
 
-    val Array(master, consumerKey, consumerSecret, accessToken, accessTokenSecret, esResource) = args.take(6)
+    val Array(master, consumerKey, consumerSecret, accessToken, accessTokenSecret, termsFile, esResource) = args.take(7)
     val esNodes = args.length match {
       case x: Int if x > 6 => args(6)
       case _ => "localhost"
     }
 
+//    val terms = Source.fromURL("file://" + termsFile).mkString
+    val terms = Source.fromURL("file://" + termsFile).mkString.split("\n")
+
     setupTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret)
     val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(2))
 
     // TODO: change this to a list since the terms are not being counted by now
-    val terms = Seq(("obama", 0),("republicans", 0),("democrats", 0),("elections", 0),("clinton", 0),
-      ("ted cruz", 0),("jeb bush", 0),("ben carson", 0), ("@SenTedCruz", 0))
+//    val terms = Seq(("obama", 0),("republicans", 0),("democrats", 0),("elections", 0),("clinton", 0),
+//      ("ted cruz", 0),("jeb bush", 0),("ben carson", 0), ("@SenTedCruz", 0))
 //    var distTerms = ssc.sparkContext.parallelize(terms)
 
-    val stream = TwitterUtils.createStream(ssc, None, terms.map(_._1))
+    val stream = TwitterUtils.createStream(ssc, None, terms)
 //    stream.print()
 
     val hashTags = stream.flatMap(status => status.getHashtagEntities.map("#" + _.getText))

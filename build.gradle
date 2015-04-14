@@ -46,9 +46,9 @@ dependencies {
     compile group: 'org.scala-lang', name:'scala-library', version: "$scalaVersion"
 
     // JSON utilities
-    compile group: 'com.fasterxml.jackson.module', name:'jackson-module-scala_' + scalaMajor, version:"$jacksonVersion"
-    compile group: 'com.fasterxml.jackson.core',   name:'jackson-core',                       version:"$jacksonVersion"
-    compile group: 'com.fasterxml.jackson.core',   name:'jackson-databind',                   version:"$jacksonVersion"
+//    compile group: 'com.fasterxml.jackson.module', name:'jackson-module-scala_' + scalaMajor, version:"$jacksonVersion"
+//    compile group: 'com.fasterxml.jackson.core',   name:'jackson-core',                       version:"$jacksonVersion"
+//    compile group: 'com.fasterxml.jackson.core',   name:'jackson-databind',                   version:"$jacksonVersion"
 
     // Log4j
     compile group: 'commons-logging', name: 'commons-logging', version: '1.2'
@@ -68,7 +68,13 @@ dependencies {
     compile group: "org.twitter4j", name: "twitter4j-stream" , version: "3.0.6"
 
     compile group: 'org.elasticsearch', name: 'elasticsearch', version: "$elasticsearchVersion"
-    compile group: 'org.elasticsearch', name: 'elasticsearch-hadoop', version: "2.1.0.Beta3"
+    compile (group: 'org.elasticsearch', name: 'elasticsearch-hadoop', version: "2.1.0.Beta3") {
+        exclude group: "org.apache.hive"
+        exclude group: "cascading"
+        exclude group: "org.apache.spark"
+        exclude group: "org.apache.storm"
+        exclude group: "org.apache.pig"
+    }
 }
 
 // Always copy files from root resources dir
@@ -76,6 +82,7 @@ processResources {
     from ("$rootDir/src/main/resources") {
         include '*.txt'
         include '*.xml'
+        include '*.conf'
     }
 }
 
@@ -83,4 +90,19 @@ jar {
     manifest {
         attributes 'Main-Class': 'com.airtonjal.Main'
     }
+}
+
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+    zip64 = true
+    archiveName "twitter-politics-fat-${version}.jar"
+    duplicatesStrategy = 'include'
+    manifest {
+        attributes 'Implementation-Title': 'Twitter politics fat jar',
+                'Implementation-Version': version,
+                'Main-Class': 'com.airtonjal.Main'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
