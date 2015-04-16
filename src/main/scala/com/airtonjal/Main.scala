@@ -4,6 +4,7 @@ import org.apache.commons.logging.LogFactory
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.streaming.twitter._
 import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.elasticsearch.hadoop.cfg.ConfigurationOptions
 
 import scala.io.Source
 
@@ -23,12 +24,13 @@ object Main {
 
     val Array(master, consumerKey, consumerSecret, accessToken, accessTokenSecret, termsFile, esResource) = args.take(7)
     val esNodes = args.length match {
-      case x: Int if x > 6 => args(6)
+      case x: Int if x > 7 => args(7)
       case _ => "localhost"
     }
 
 //    val terms = Source.fromURL("file://" + termsFile).mkString
     val terms = Source.fromURL("file://" + termsFile).mkString.split("\n")
+    terms.foreach(t => log.info("Filtering term: " + t))
 
     setupTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret)
     val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(2))
@@ -72,7 +74,7 @@ object Main {
           "language"   -> t.getLang,
           "user"       -> t.getUser.getName)
           .filter(kv => kv._2 != null && kv._2 != None)
-      }.saveToEs(esResource, Map("es.nodes" -> esNodes))
+      }.saveToEs(esResource, Map(ConfigurationOptions.ES_NODES -> esNodes))
     })
 
     log.info("Starting twitter-politics stream")
