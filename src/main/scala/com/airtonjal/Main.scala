@@ -1,10 +1,11 @@
 package com.airtonjal
 
-import org.apache.commons.logging.LogFactory
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.streaming.twitter._
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.elasticsearch.hadoop.cfg.ConfigurationOptions
+
+import com.typesafe.scalalogging.Logger
 
 import scala.io.Source
 
@@ -14,11 +15,11 @@ import scala.io.Source
  */
 object Main {
 
-  private val log = LogFactory.getLog(getClass())
+  private val log = Logger(getClass())
 
   def main(args: Array[String]) {
     if (args.length < 6) {
-      log.fatal("Twitter politics usage: <master> <key> <secret key> <access token> <access token secret> <terms file> <es-resource> [es-nodes]")
+      log.error("Twitter politics usage: <master> <key> <secret key> <access token> <access token secret> <terms file> <es-resource> [es-nodes]")
       System.exit(1)
     }
 
