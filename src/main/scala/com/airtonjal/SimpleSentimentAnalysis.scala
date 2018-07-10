@@ -1,6 +1,6 @@
 package com.airtonjal
 
-import org.apache.commons.logging.LogFactory
+import com.typesafe.scalalogging.Logger
 
 import scala.io.Source
 
@@ -9,7 +9,7 @@ import scala.io.Source
  * @author <a href="mailto:airtonjal@gmail.com">Airton Libório</a>
  */
 object SimpleSentimentAnalysis {
-  private val log = LogFactory.getLog(getClass())
+  private val log = Logger(getClass())
 
   private val POSITIVE_FILE = "positive-words.txt"
   private val NEGATIVE_FILE = "negative-words.txt"

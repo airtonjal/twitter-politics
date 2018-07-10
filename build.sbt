@@ -25,10 +25,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
 
-  "org.apache.spark" %% "spark-core" % sparkVersion,
-  "org.apache.spark" %% "spark-streaming" % sparkVersion ,
-  "org.apache.spark" %% "spark-streaming-twitter" % "1.6.3",
-
 //  "com.twitter.elephantbird" % "elephant-bird" % "4.5",
 //  "com.twitter.elephantbird" % "elephant-bird-core" % "4.5",
 //  "org.twitter4j" % "twitter4j-stream"  % "3.0.6",
@@ -36,5 +32,11 @@ libraryDependencies ++= Seq(
   "org.elasticsearch" % "elasticsearch" % elasticsearchVersion,
   "org.elasticsearch" % "elasticsearch-hadoop" % elasticsearchVersion
 )
+
+libraryDependencies ++= Seq(
+  "org.apache.spark" %% "spark-core" % sparkVersion exclude("org.slf4j", "slf4j-api"),
+  "org.apache.spark" %% "spark-streaming" % sparkVersion exclude("org.slf4j", "slf4j-api"),
+  "org.apache.spark" %% "spark-streaming-twitter" % "1.6.3" exclude("org.slf4j", "slf4j-api")
+).map(_.exclude("org.slf4j", "*"))
 
 mainClass in (Compile, run) := Some("com.airtonjal.Main")
