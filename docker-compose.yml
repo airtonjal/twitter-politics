@@ -1,0 +1,67 @@
+version: "3.3"
+
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - data:/usr/share/elasticsearch/data
+    networks:
+      - es_net
+    environment:
+      - "cluster.name=twitter-politics-es-cluster"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "xpack.security.enabled=false"
+      - "es.enforce.bootstrap.checks"
+      - "http.host=0.0.0.0"
+      - "network.host=_eth0:ipv4_"
+      - "discovery.zen.ping.unicast.hosts=tasks.elasticsearch"
+      - "discovery.zen.minimum_master_nodes=2"
+      # - "bootstrap.memory_lock=true"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+    healthcheck:
+      test: "curl --silent --fail localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s || exit 1"
+      interval: 1m30s
+      timeout: 50s
+      retries: 5
+    #deploy:
+    #  mode: global # Will be deployed to all nodes that match constraint, once per node
+    #  placement:
+    #    constraints:
+    #      - node.labels.node_type == elasticsearch
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:6.3.1
+    ports:
+      - "5601:5601"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+    networks:
+      - es_net
+    depends_on:
+      - elasticsearch
+    environment:
+      LOGGING_QUIET: "true"
+    #deploy:
+    #  mode: replicated
+    #  replicas: 1
+    #  placement:
+    #    constraints:
+    #      - node.role == manager
+
+volumes:
+  data:
+
+networks:
+  es_net:

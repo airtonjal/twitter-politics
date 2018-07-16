@@ -18,20 +18,20 @@ object Main {
   private val log = Logger(getClass())
 
   def main(args: Array[String]) {
-    if (args.length < 6) {
-      log.error("Twitter politics usage: <master> <key> <secret key> <access token> <access token secret> <terms file> <es-resource> [es-nodes]")
+    if (args.length < 4) {
+      log.error("Twitter politics usage: <master> <key> <secret key> <access token> <access token secret> <es-resource> <terms file> [es-nodes]")
       System.exit(1)
     }
 
-    val Array(master, consumerKey, consumerSecret, accessToken, accessTokenSecret, termsFile, esResource) = args.take(7)
+    val Array(master, consumerKey, consumerSecret, accessToken, accessTokenSecret, esResource) = args.take(6)
     val esNodes = args.length match {
       case x: Int if x > 7 => args(7)
       case _ => "localhost"
     }
 
 //    val terms = Source.fromURL("file://" + termsFile).mkString
-    val terms = Source.fromURL("file://" + termsFile).mkString.split("\n")
-    terms.foreach(t => log.info("Filtering term: " + t))
+//    val terms = Source.fromURL("file://" + termsFile).mkString.split("\n")
+//    terms.foreach(t => log.info("Filtering term: " + t))
 
     setupTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret)
     val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(2))
@@ -41,7 +41,7 @@ object Main {
 //      ("ted cruz", 0),("jeb bush", 0),("ben carson", 0), ("@SenTedCruz", 0))
 //    var distTerms = ssc.sparkContext.parallelize(terms)
 
-    val stream = TwitterUtils.createStream(ssc, None, terms)
+    val stream = TwitterUtils.createStream(ssc, None)
 //    stream.print()
 
     val hashTags = stream.flatMap(status => status.getHashtagEntities.map("#" + _.getText))

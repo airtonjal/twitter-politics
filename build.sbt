@@ -5,7 +5,7 @@ scalaVersion := "2.11.12"
 val log4jVersion = "2.2"
 val jacksonVersion = "2.5.1"
 val elasticsearchVersion = "6.3.1"
-val sparkVersion = "2.3.1"
+val sparkVersion = "2.2.1"
 
 resolvers ++= Seq(
   "Apache" at "https://repository.apache.org/content/repositories/releases",
@@ -34,9 +34,10 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % sparkVersion exclude("org.slf4j", "slf4j-api"),
-  "org.apache.spark" %% "spark-streaming" % sparkVersion exclude("org.slf4j", "slf4j-api"),
-  "org.apache.spark" %% "spark-streaming-twitter" % "1.6.3" exclude("org.slf4j", "slf4j-api")
-).map(_.exclude("org.slf4j", "*"))
+  "org.apache.spark" %% "spark-core" % sparkVersion,
+  "org.apache.spark" %% "spark-streaming" % sparkVersion,
+//  "org.apache.spark" %% "spark-streaming-twitter" % "1.6.3"
+  "org.apache.bahir" %% "spark-streaming-twitter" % sparkVersion
+).map(_.exclude("org.slf4j", "slf4j-log4j12"))
 
 mainClass in (Compile, run) := Some("com.airtonjal.Main")
