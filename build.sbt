@@ -15,10 +15,14 @@ libraryDependencies ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core"              % sparkVersion % Provided,
-  "org.apache.spark" %% "spark-streaming"         % sparkVersion % Provided,
-  "org.apache.bahir" %% "spark-streaming-twitter" % sparkVersion % Provided
+  "org.apache.spark" %% "spark-streaming"         % sparkVersion,
+  "org.apache.bahir" %% "spark-streaming-twitter" % sparkVersion
 ).map(_.exclude("org.slf4j", "slf4j-log4j12"))
 
 mainClass in (Compile, run) := Some("com.airtonjal.Main")
 
-updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true) // For faster builds
+// For faster builds
+updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true)
+
+// Supress some useless warnings
+evictionWarningOptions in update := EvictionWarningOptions.default.withWarnTransitiveEvictions(false)
