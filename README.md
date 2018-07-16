@@ -3,6 +3,12 @@ A twitter stream filtered by politics topics. The data is streamed into [Apache 
 
 ![Politics tweets visualization](img/kibana.png)
 
+# Requirements
+
+- [Docker engine 18.02.0+](https://docs.docker.com/release-notes/docker-ce/)
+- [Elasticsearch 6.3.1](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/release-notes-6.3.1.html)
+- [Kibana 6.3.1](https://www.elastic.co/guide/en/kibana/6.3/release-notes-6.3.1.html)
+
 # Building
 
 To build the application, go to the root dir and type:
