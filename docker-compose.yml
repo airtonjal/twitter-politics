@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.6"
 
 services:
 
@@ -7,8 +7,6 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-    volumes:
-      - data:/usr/share/elasticsearch/data
     networks:
       - es_net
     environment:
@@ -18,9 +16,7 @@ services:
       - "es.enforce.bootstrap.checks"
       - "http.host=0.0.0.0"
       - "network.host=_eth0:ipv4_"
-      - "discovery.zen.ping.unicast.hosts=tasks.elasticsearch"
-      - "discovery.zen.minimum_master_nodes=2"
-      # - "bootstrap.memory_lock=true"
+      - "bootstrap.memory_lock=true"
     logging:
       driver: "json-file"
       options:
@@ -31,11 +27,10 @@ services:
       interval: 1m30s
       timeout: 50s
       retries: 5
-    #deploy:
-    #  mode: global # Will be deployed to all nodes that match constraint, once per node
-    #  placement:
-    #    constraints:
-    #      - node.labels.node_type == elasticsearch
+    ulimits:
+       memlock:
+         soft: -1
+         hard: -1
 
   kibana:
     container_name: kibana
@@ -53,15 +48,6 @@ services:
       - elasticsearch
     environment:
       LOGGING_QUIET: "true"
-    #deploy:
-    #  mode: replicated
-    #  replicas: 1
-    #  placement:
-    #    constraints:
-    #      - node.role == manager
-
-volumes:
-  data:
 
 networks:
   es_net:
