@@ -24,10 +24,12 @@ object Main {
     }
 
     val Array(master, consumerKey, consumerSecret, accessToken, accessTokenSecret, esResource) = args.take(6)
-    val esNodes = args.length match {
-      case x: Int if x > 7 => args(7)
-      case _ => "localhost"
-    }
+//    val esNodes = args.length match {
+//      case x: Int if x > 7 => args(7)
+//      case _ => "localhost"
+//    }
+
+    val esNodes = "localhost"
 
 //    val terms = Source.fromURL("file://" + termsFile).mkString
 //    val terms = Source.fromURL("file://" + termsFile).mkString.split("\n")
@@ -50,7 +52,7 @@ object Main {
     // Print popular hashtags in the last 120 seconds
     val topHashTags = hashTags.map((_, 1)).reduceByKeyAndWindow(_ + _, Seconds(WINDOW))
       .map{ case (hashTag, count) => (count, hashTag) }
-      .transform(_.sortByKey(false))
+      .transform(_.sortByKey(ascending = false))
     topHashTags.foreachRDD(tweetRDD => {
       val topList = tweetRDD.take(10)
       log.info("-----------------------------------------------------------")
@@ -75,8 +77,9 @@ object Main {
           "language"   -> t.getLang,
           "user"       -> t.getUser.getName)
           .filter(kv => kv._2 != null && kv._2 != None)
-      }.saveToEs(esResource, Map(ConfigurationOptions.ES_NODES -> esNodes))
+      }.saveToEs(esResource, Map(ConfigurationOptions.ES_NODES -> esNodes, "es.nodes.wan.only" -> "true"))
     })
+    //, "es.nodes.discovery" -> "false"
 
     log.info("Starting twitter-politics stream")
 
