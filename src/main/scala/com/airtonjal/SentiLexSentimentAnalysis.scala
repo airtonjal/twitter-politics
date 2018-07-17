@@ -12,6 +12,8 @@ object SentiLexSentimentAnalysis {
 
   private val log = Logger(getClass)
 
+  private val POSITIVE_LABEL = "POL=1"
+  private val NEGATIVE_LABEL = "POL=-1"
   private val FLEX_FILE = "SentiLex-flex-PT01.txt"
   private val LEM_FILE  = "SentiLex-lem-PT01.txt"
 
@@ -39,9 +41,6 @@ object SentiLexSentimentAnalysis {
     else if (factor > 0) POSITIVE_WORD
     else                 NEUTRAL_WORD, factor)
   }
-
-  private val POSITIVE_LABEL = "POL=1"
-  private val NEGATIVE_LABEL = "POL=-1"
 
   private def toPositiveSet(words: Array[String]) =
     words.filter(_.contains(POSITIVE_LABEL)).map(_.split(",")(0)).toSet
