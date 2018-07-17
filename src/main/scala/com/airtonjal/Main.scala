@@ -7,15 +7,13 @@ import org.elasticsearch.hadoop.cfg.ConfigurationOptions
 
 import com.typesafe.scalalogging.Logger
 
-import scala.io.Source
-
 /**
  * Application entry point
  * @author <a href="mailto:airtonjal@gmail.com">Airton Libório</a>
  */
 object Main {
 
-  private val log = Logger(getClass())
+  private val log = Logger(getClass)
 
   def main(args: Array[String]) {
     if (args.length < 4) {
@@ -24,27 +22,14 @@ object Main {
     }
 
     val Array(master, consumerKey, consumerSecret, accessToken, accessTokenSecret, esResource) = args.take(6)
-//    val esNodes = args.length match {
-//      case x: Int if x > 7 => args(7)
-//      case _ => "localhost"
-//    }
-
-    val esNodes = "localhost"
-
-//    val terms = Source.fromURL("file://" + termsFile).mkString
-//    val terms = Source.fromURL("file://" + termsFile).mkString.split("\n")
-//    terms.foreach(t => log.info("Filtering term: " + t))
 
     setupTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret)
     val ssc = new StreamingContext(master, "Twitter politics stream", Seconds(2))
 
     // TODO: change this to a list since the terms are not being counted by now
-//    val terms = Seq(("obama", 0),("republicans", 0),("democrats", 0),("elections", 0),("clinton", 0),
-//      ("ted cruz", 0),("jeb bush", 0),("ben carson", 0), ("@SenTedCruz", 0))
-//    var distTerms = ssc.sparkContext.parallelize(terms)
+    val terms = Seq("bolsonaro", "lula", "bolsomito", "bolsominion", "bolsominions", "luladrão", "luladrao", "ciro gomes")
 
-    val stream = TwitterUtils.createStream(ssc, None)
-//    stream.print()
+    val stream = TwitterUtils.createStream(ssc, None, terms)
 
     val hashTags = stream.flatMap(status => status.getHashtagEntities.map("#" + _.getText))
 
@@ -71,15 +56,14 @@ object Main {
           case gl   => Some(Map("lat" -> t.getGeoLocation.getLatitude, "lon" -> t.getGeoLocation.getLongitude))
         }
         Map("text"     -> t.getText,
-          "sentiment"  -> SimpleSentimentAnalysis.classify(t.getText)._1,
+          "sentiment"  -> SentiLexSentimentAnalysis.classify(t.getText)._1,
           "created_at" -> t.getCreatedAt,
           "location"   -> location,
           "language"   -> t.getLang,
           "user"       -> t.getUser.getName)
           .filter(kv => kv._2 != null && kv._2 != None)
-      }.saveToEs(esResource, Map(ConfigurationOptions.ES_NODES -> esNodes, "es.nodes.wan.only" -> "true"))
+      }.saveToEs(esResource, Map(ConfigurationOptions.ES_NODES_WAN_ONLY -> "true"))
     })
-    //, "es.nodes.discovery" -> "false"
 
     log.info("Starting twitter-politics stream")
 
